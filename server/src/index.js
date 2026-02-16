@@ -2,6 +2,7 @@
 
 //everything depends on "process.env"
 require("dotenv").config();  //load env variables first
+console.log("Port being used: ", process.env.PORT);  //debug print
 
 //require necessary packages
 const express = require('express');                      //web framework
@@ -10,11 +11,16 @@ const helmet = require('helmet');                      //sets sane security-rela
 const cookieParser = require('cookie-parser');        //parses cookies from HTTP requests
 const session = require('express-session');          //chosen auth mechanism
 const rateLimit = require('express-rate-limit');    //brute-force or prevent credential stuffing
+const authRouter = require('./routes/auth');       //import auth routes
+
+//Mount auth routes at /auth
+app.use("/auth", authRouter);
 
 //import database and redis modules
 const { test_db_connection } = require('./db');                          //PostGres module
 const { redisClient, test_redis_connection } = require('./redis');      //Redis module
-const RedisStore = require('connect-redis').default;                   //Redis session store for express-session
+const connectRedis = require("connect-redis");                   //connect-redis module
+const RedisStore = connectRedis.RedisStore || connectRedis.default || connectRedis;    //gurantees RedisStore becomes actual constructor
 
 //create express app
 const app = express();      //main app object
@@ -37,7 +43,7 @@ app.use(
 app.use(
     rateLimit({
         windowMs: 15 * 60 * 1000, // 15 minutes
-        maxLimit: 100, // limit each IP to 100 requests per windowMs
+        limit: 100, // limit each IP to 100 requests per windowMs
         standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
         legacyHeaders: false, // Disable the `X-RateLimit-*` headers
     })
@@ -71,3 +77,16 @@ app.get("/health", async (req, res) => {
     }
 });
 
+const port = Number(process.env.PORT || 4000);
+
+(async () => {
+    try {
+        await test_redis_connection();
+        app.listen(port, () => {
+            console.error(`API running on http://localhost:${port}/health`);
+        });
+    } catch (err) {
+        console.error(`Startup error:`, err);
+        process.exit(1);
+    }
+})();
