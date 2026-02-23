@@ -11,10 +11,7 @@ const helmet = require('helmet');                      //sets sane security-rela
 const cookieParser = require('cookie-parser');        //parses cookies from HTTP requests
 const session = require('express-session');          //chosen auth mechanism
 const rateLimit = require('express-rate-limit');    //brute-force or prevent credential stuffing
-const authRouter = require('./routes/auth');       //import auth routes
-
-//Mount auth routes at /auth
-app.use("/auth", authRouter);
+const authRouter = require('./routes/auth.js');       //import auth routes
 
 //import database and redis modules
 const { test_db_connection } = require('./db');                          //PostGres module
@@ -90,3 +87,6 @@ const port = Number(process.env.PORT || 4000);
         process.exit(1);
     }
 })();
+
+//Mount auth routes at /auth
+app.use("/auth", authRouter);
