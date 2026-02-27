@@ -3,6 +3,7 @@ const { z, ZodError } = require("zod"); //Zod for input validation and schema de
 const argon2 = require("argon2"); //Argon2 for secure password hashing and verification
 const { pool } = require("../db.js");     //PostGres connection pool
 const rateLimit = require('express-rate-limit');    //brute-force or prevent credential stuffing
+const reqAuth = require("../middleware/requireAuth.js"); //Middleware to protect routes
 
 //Create a new router instance
 const router = express.Router();
@@ -88,4 +89,40 @@ router.post("/login", loginLimiter, async (req, res) => {
         res.status(500).json({ error: "Internal server error" });
     }
 })
+
+//"Who Am I?" Endpoint - to check if user is authenticated and get their info
+router.get("/me", reqAuth, async (req, res) => {
+    try{
+        const result = await pool.query(
+            "SELECT id, email, role, created_at FROM users WHERE id = $1",
+            [req.session.userId]
+        );
+        const user = result.rows[0];
+        if(!user) {
+            return res.status(404).json({error: "User not found"});
+        } else {
+            return res.status(200).json({user: {id: user.id, email: user.email, role: user.role, created_at: user.created_at}});
+        }
+    } catch (err) {
+        res.status(500).json({error: "Internal server error"});
+    }
+})
+
+
+//Logout Endpoint
+router.post("/logout", reqAuth, (req, res) => {
+    req.session.destroy((err) => {      //destroy session on server side (from Redis)
+        res.clearCookie("dev"); //clear the cookie on client side
+        if (err) {
+            return res.status(500).json({ error: "Could not log out" });
+        }
+        return res.status(200).json({ message: "Logged out successfully" });
+    })
+})
+
+//Protected route example
+router.get("/check-auth", reqAuth, (req, res) => {
+    return res.json({ message: "Accesss Granted", ok: true, userId: req.session.userId, role: req.session.role });
+})
+
 module.exports = router;
