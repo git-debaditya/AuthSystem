@@ -19,10 +19,14 @@ export default function Login() {
         setLoading(true);     //set loading state to true
 
         try {
-            await api.post("/auth/login", {email, password });  //send login request to backend
-            navigate("/dashboard");  //redirect to dashboard on successful login
+            //send login request to backend
+            await api.post("/auth/login", {email, password });
+            
+            //redirect to dashboard on successful login
+            navigate("/dashboard");
         } catch (err) {
-            const status = err?.response?.status;  //get status code from error response
+            //get status code from error response
+            const status = err?.response?.status;
             
             if (status === 400) {
                 //set error message for validation errors
