@@ -53,7 +53,7 @@ export default function Login() {
     return (
         <div className="page">
             <div className="card">
-                <h2>Login</h2>
+                <h2 className="title">Login</h2>
 
                 {error && <p className="alert">{error}</p>}
 

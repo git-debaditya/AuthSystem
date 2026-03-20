@@ -7,7 +7,8 @@ import { useNavigate, Link } from "react-router-dom";     //redirect after regis
 import api from "../api";                          //ensures cookies are included automatically
 
 export default function Register () {
-    const navigate = useNavigate("");         //for redirecting after registration
+    const navigate = useNavigate();         //for redirecting after registration
+    
     const [email, setEmail] = useState("");         //initialize state for email
     const [password, setPassword] = useState("");   //initialize state for password
     const [confirmPassword, setConfirmPassword ] = useState("");  //initialize state for confirm password
@@ -29,6 +30,7 @@ export default function Register () {
             return;
         }
         setLoading(true);     //set loading state to true
+
         try {
             //send registration request to backend
             await api.post("/auth/register", { email, password })
@@ -41,11 +43,9 @@ export default function Register () {
 
             if (status === 409) {
                 setError("Email is already in use!");
-            }
-            if (status === 400) {
+            } else if (status === 400) {
                 setError("Invalid email or password!");
-            }
-            else {
+            } else {
                 setError("Internal server error.");
             }
         } finally {
@@ -57,9 +57,9 @@ export default function Register () {
     return (
         <div className="page">
             <div className="card">
-                <h2>Register</h2>
+                <h2 className="title">Register</h2>
 
-                {error && <p class="alert">{error}</p>}
+                {error && <p className="alert">{error}</p>}
 
                 <form className="form" onSubmit={handleSubmit}>
                     <label htmlFor="email" className="label">Email: </label>
@@ -67,7 +67,7 @@ export default function Register () {
                         id="email"
                         className="input"
                         type="email"
-                        autocomplete="email"
+                        autoComplete="email"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         required
@@ -77,7 +77,7 @@ export default function Register () {
                         id="password"
                         className="input"
                         type="password"
-                        autoComplete="current-password"
+                        autoComplete="new-password"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         required
@@ -87,7 +87,7 @@ export default function Register () {
                         id="confirmPassword"
                         className="input"
                         type="password"
-                        autoComplete="current-password"
+                        autoComplete="new-password"
                         value={confirmPassword}
                         onChange={(e) => setConfirmPassword(e.target.value)}
                         required
