@@ -3,7 +3,7 @@
 //On success: redirect to /dashboard
 
 import { useState } from "react";                    //track form fields & errors
-import { useNavigate } from "react-router-dom";     //redirect after login
+import { useNavigate, Link } from "react-router-dom";     //redirect after login
 import api from "../api";                          //ensures cookies are included automatically
 
 export default function Login() {
