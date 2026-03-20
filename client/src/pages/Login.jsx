@@ -85,7 +85,7 @@ export default function Login() {
                 </form>
 
                 <p className="muted">
-                    Don't have an account? {/*<link className="link" to="/register">Register</link> */}
+                    Don't have an account? <Link className="link" to="/register">Register</Link>
                 </p>
             </div>
         </div>
