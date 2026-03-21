@@ -1,5 +1,3 @@
-# This is a sample .gitignore file
-
 # Node modules
 client/node_modules/
 
