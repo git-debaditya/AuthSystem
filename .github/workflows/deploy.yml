@@ -17,4 +17,4 @@ jobs:
       run: npm run build
     - name: Deploy
       run: npm run deploy
-  url: ${{ steps.deployment.outputs.page_url }}
+  #url: ${{ steps.deployment.outputs.page_url }}
