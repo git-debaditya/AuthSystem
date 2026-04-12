@@ -7,7 +7,7 @@ import "./App.css";
 
 function App() {
   return (
-    <Router>
+    <Router basename="/AuthSystem/">
       <Routes>
         <Route path= "/" element ={<Navigate to="/login" replace />} />   {/* Redirect root to login */}
         <Route path="/register" element={<Register />} />
