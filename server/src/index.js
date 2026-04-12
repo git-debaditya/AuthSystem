@@ -29,9 +29,11 @@ app.use(express.json());              //parse JSON bodies
 app.use(cookieParser());             //parse cookies
 
 //Cookie based auth requires credentials
+const allowedOrigins = (process.env.CORS_ORIGIN || "").split(",").map(origin => origin.trim());
+
 app.use(
     cors({
-        origin: process.env.CORS_ORIGIN,
+        origin: allowedOrigins, //allow only specified origins
         credentials: true,
     })
 );
