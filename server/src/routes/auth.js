@@ -10,12 +10,12 @@ const router = express.Router();
 
 //ZOD schema for validating registration input
 const registrationSchema = z.object({
-    email: z.string().email(), //email must be a valid email string
+    email: z.string().trim().toLowerCase().email(), //email must be a valid email string, trim whitespace and convert to lowercase
     password: z.string().min(8), //password must be at least 8 characters
 });
 
 //Registration Endpoint
-router.post("/register", async (req, res) => {
+router.post("/register", registerLimiter, async (req, res) => {
     try {
         //Validate input against schema
         const { email, password } = registrationSchema.parse(req.body);
@@ -23,7 +23,7 @@ router.post("/register", async (req, res) => {
         const hashedPassword = await argon2.hash(password);
         //Insert new user into the database
         const result = await pool.query(
-            "INSERT INTO users (email, password_hash) VALUES ($1, $2) RETURNING id, email, role, created_at",
+            "INSERT INTO users (email, password_hash) VALUES ($1, $2) RETURNING id, email, role, created_at AS \"createdAt\"",
             [email, hashedPassword]
         );
         //Set session
@@ -49,11 +49,19 @@ const loginLimiter = rateLimit({
         limit: 5, // limit each IP to 5 requests per windowMs
         standardHeaders: true, // Return rate limit info in the `RateLimit` headers
         legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+        message: { error: "Too many login attempts. Try again later." }
     });
+const registerLimiter = rateLimit({
+    windowMs: 5 * 60 * 1000, // 5 minute
+    limit: 5, // limit each IP to 5 requests per windowMs
+    standardHeaders: true, // Return rate limit info in the `RateLimit` headers
+    legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+    message: { error: "Too many registration attempts. Try again later." }
+});
 
 //ZOD schema for validating login input
 const loginSchema = z.object({
-    email: z.string().email(), //email must be a valid email string
+    email: z.string().trim().toLowerCase().email(), //email must be a valid email string, trim whitespace and convert to lowercase
     password: z.string().min(8), //password must be at least 8 characters
 });
 
@@ -94,7 +102,7 @@ router.post("/login", loginLimiter, async (req, res) => {
 router.get("/me", reqAuth, async (req, res) => {
     try{
         const result = await pool.query(
-            "SELECT id, email, role, created_at FROM users WHERE id = $1",
+            "SELECT id, email, role, created_at AS \"createdAt\" FROM users WHERE id = $1",
             [req.session.userId]
         );
         const user = result.rows[0];
