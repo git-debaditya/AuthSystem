@@ -8,6 +8,15 @@ const reqAuth = require("../middleware/requireAuth.js"); //Middleware to protect
 //Create a new router instance
 const router = express.Router();
 
+//Rate Limiter for registration endpoint to prevent abuse
+const registerLimiter = rateLimit({
+    windowMs: 5 * 60 * 1000, // 5 minute
+    limit: 5, // limit each IP to 5 requests per windowMs
+    standardHeaders: true, // Return rate limit info in the `RateLimit` headers
+    legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+    message: { error: "Too many registration attempts. Try again later." }
+});
+
 //ZOD schema for validating registration input
 const registrationSchema = z.object({
     email: z.string().trim().toLowerCase().email(), //email must be a valid email string, trim whitespace and convert to lowercase
@@ -23,7 +32,7 @@ router.post("/register", registerLimiter, async (req, res) => {
         const hashedPassword = await argon2.hash(password);
         //Insert new user into the database
         const result = await pool.query(
-            "INSERT INTO users (email, password_hash) VALUES ($1, $2) RETURNING id, email, role, created_at AS \"createdAt\"",
+            "INSERT INTO users (email, password_hash) VALUES ($1, $2) RETURNING id, email, role, created_at",
             [email, hashedPassword]
         );
         //Set session
@@ -43,7 +52,7 @@ router.post("/register", registerLimiter, async (req, res) => {
     }
 });
 
-//Rate Limiter
+//Rate Limiter for login endpoint to prevent brute-force or credential stuffing attacks
 const loginLimiter = rateLimit({
         windowMs: 5 * 60 * 1000, // 5 minute
         limit: 5, // limit each IP to 5 requests per windowMs
@@ -51,13 +60,6 @@ const loginLimiter = rateLimit({
         legacyHeaders: false, // Disable the `X-RateLimit-*` headers
         message: { error: "Too many login attempts. Try again later." }
     });
-const registerLimiter = rateLimit({
-    windowMs: 5 * 60 * 1000, // 5 minute
-    limit: 5, // limit each IP to 5 requests per windowMs
-    standardHeaders: true, // Return rate limit info in the `RateLimit` headers
-    legacyHeaders: false, // Disable the `X-RateLimit-*` headers
-    message: { error: "Too many registration attempts. Try again later." }
-});
 
 //ZOD schema for validating login input
 const loginSchema = z.object({
@@ -102,7 +104,7 @@ router.post("/login", loginLimiter, async (req, res) => {
 router.get("/me", reqAuth, async (req, res) => {
     try{
         const result = await pool.query(
-            "SELECT id, email, role, created_at AS \"createdAt\" FROM users WHERE id = $1",
+            "SELECT id, email, role, created_at FROM users WHERE id = $1",
             [req.session.userId]
         );
         const user = result.rows[0];
