@@ -2,7 +2,7 @@
 //On submit: POST /auth/login
 //On success: redirect to /dashboard
 
-import { useState } from "react";                    //track form fields & errors
+import { useEffect, useRef, useState } from "react";                    //track form fields & errors
 import { useNavigate, Link } from "react-router-dom";     //redirect after login
 import api from "../api";                          //ensures cookies are included automatically
 
@@ -12,6 +12,28 @@ export default function Login() {
     const [password, setPassword] = useState("");   //initialize state for password
     const [error, setError] = useState("");         //initialize state for error message
     const [loading, setLoading] = useState(false);  //initialize state for loading status
+    const [showPassword, setShowPassword] = useState(false); //state to toggle password visibility
+    const passwordTimerRef = useRef(null);          //ref to track password visibility timer
+
+    function handleShowPassword() {
+        setShowPassword(true);  //show password when user clicks "Show Password"
+
+        if (passwordTimerRef.current) {
+            clearTimeout(passwordTimerRef.current);  //clear existing timer if user clicks again before timer expires
+        }
+
+        passwordTimerRef.current = setTimeout(() => {
+            setShowPassword(false); //hide password after 5 seconds
+        }, 5000);
+    }
+    useEffect(() => {
+        return () => {
+            if(passwordTimerRef.current) {
+                clearTimeout(passwordTimerRef.current);
+            }
+        };
+    }, []); //cleanup timer on component unmount
+
 
     async function handleSubmit(e) {
         e.preventDefault();     //prevent page reload
@@ -72,12 +94,20 @@ export default function Login() {
                     <input
                         id="password"
                         className="input"
-                        type="password"
+                        type={showPassword ? "text" : "password"}
                         autoComplete="current-password"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         required
                     />
+                    <button
+                        className="show-password-button"
+                        type="button"
+                        onClick={handleShowPassword}
+                        disabled={!password} //disable button if password field is empty
+                    >
+                        {showPassword ? "Hide Password" : "Show Password"}
+                    </button>
 
                     <button className="button" type="submit" disabled={loading}>
                         {loading ? "Logging in..." : "Login"}
