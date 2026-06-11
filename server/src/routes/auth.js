@@ -4,6 +4,7 @@ const argon2 = require("argon2"); //Argon2 for secure password hashing and verif
 const { pool } = require("../db.js");     //PostGres connection pool
 const rateLimit = require('express-rate-limit');    //brute-force or prevent credential stuffing
 const reqAuth = require("../middleware/requireAuth.js"); //Middleware to protect routes
+const reqRole = require("../middleware/requireRole.js"); //Middleware factory to check for specific user roles
 
 //Create a new router instance
 const router = express.Router();
@@ -118,6 +119,12 @@ router.get("/me", reqAuth, async (req, res) => {
     }
 })
 
+//Admin-only Endpoint
+router.get("/admin", reqAuth, reqRole("ADMIN"), async (req, res) => {
+    return res.status(200).json({
+        message: `Welcome ${req.session.userId} ${req.session.role}!`
+    });
+});
 
 //Logout Endpoint
 router.post("/logout", reqAuth, (req, res) => {
