@@ -24,6 +24,8 @@ const registrationSchema = z.object({
     password: z.string().min(8), //password must be at least 8 characters
 });
 
+/* Public routes (no authentication required) [register, login, etc.] */
+
 //Registration Endpoint
 router.post("/register", registerLimiter, async (req, res) => {
     try {
@@ -101,6 +103,8 @@ router.post("/login", loginLimiter, async (req, res) => {
     }
 })
 
+/* Protected Endpoint to get current user info (requires authentication) */
+
 //"Who Am I?" Endpoint - to check if user is authenticated and get their info
 router.get("/me", reqAuth, async (req, res) => {
     try{
@@ -122,7 +126,9 @@ router.get("/me", reqAuth, async (req, res) => {
 //Admin-only Endpoint
 router.get("/admin", reqAuth, reqRole("ADMIN"), async (req, res) => {
     return res.status(200).json({
-        message: `Welcome ${req.session.userId} ${req.session.role}!`
+        message: "Welcome admin!",
+        userId: req.session.userId,
+        role: req.session.role,
     });
 });
 
